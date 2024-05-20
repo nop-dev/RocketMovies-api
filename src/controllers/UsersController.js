@@ -9,13 +9,20 @@ class UsersController {
             throw new AppError("O nome é obrigatório...")
         }
 
-        console.log(name)
-
         const hashedPassword = await hash(password, 12)
         
         res.status(201).json();
 
         return res.status(201).json();
+    }
+
+    async update(req, res) {
+        const { name, email, password, old_password } = res.body;
+        const { id } = res.params;
+
+        if(!user) {
+            throw new AppError("Usuário não encontrado...");
+        };
     }
 }
 
