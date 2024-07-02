@@ -1,11 +1,14 @@
+require('express-async-errors');
 const express = require("express")
 
+const migrationsRun = require("./database/knex")
 const app = express();
 app.use(express.json());
 
 const routes = require("./routes");
 
 app.use(routes);
+migrationsRun();
 
 app.use(( error, request, response, next ) => {
     if(error instanceof AppError) {
