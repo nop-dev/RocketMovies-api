@@ -1,5 +1,6 @@
 require('express-async-errors');
 const express = require("express")
+const AppError = require("./utils/AppError")
 
 const migrationsRun = require("./database/knex")
 const app = express();
