@@ -1,6 +1,7 @@
 const knex = require("../database/knex");
 const { hash, compare } = require("bcryptjs");
 const AppError = require("../utils/AppError");
+const { response } = require("express");
 
 class UsersController {
     async create(req, res) {
@@ -79,6 +80,14 @@ class UsersController {
                 res.status(500).json({ error: "Ocorreu um erro ao processar a requisição." });
             }
         }
+    }
+
+    async delete(req, res) {
+        const { id } = req.params;
+
+        await knex("users").where({ id : id }).delete();
+
+        res.status(202).json()
     }
 }
 
