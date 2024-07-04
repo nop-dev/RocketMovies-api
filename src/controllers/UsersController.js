@@ -22,46 +22,55 @@ class UsersController {
     }
 
     async update(req, res) {
-        let { name, email, new_password, old_password } = req.body;
-        const { id } = req.params;
+        try {
+            let { name, email, new_password, old_password } = req.body;
+            const { id } = req.params;
 
-        const user = await knex('users').where({ id: id }).first();
+            const user = await knex('users').where({ id: id }).first();
 
-        if (!user) {
-            throw new AppError("Usuário não encontrado...");
-        }
-
-        if (email !== user.email) {
-            const userWithUpdatedEmail = await knex('users').where({ email: email }).first();
-            if (userWithUpdatedEmail && userWithUpdatedEmail.id !== user.id) {
-                throw new AppError("Este email já está em uso...");
-            }
-        }
-
-        user.name = name ?? user.name;
-        user.email = email ?? user.email;
-
-        if (new_password && !old_password) {
-            throw new AppError("Você precisa informar a senha antiga para definir uma nova senha...");
-        }
-
-        if (new_password && old_password) {
-            const checkOldPassword = await compare(old_password, user.password);
-            if (!checkOldPassword) {
-                throw new AppError("A senha antiga não está correta.");
+            if (!user) {
+                throw new AppError("Usuário não encontrado.", 404);
             }
 
-            const updatedpassword = await hash(new_password, 8);
-            user.password = updatedpassword;
+            if (email !== user.email) {
+                const userWithUpdatedEmail = await knex('users').where({ email: email }).first();
+                if (userWithUpdatedEmail && userWithUpdatedEmail.id !== user.id) {
+                    throw new AppError("Este email já está em uso.", 400);
+                }
+            }
+
+            user.name = name ?? user.name;
+            user.email = email ?? user.email;
+
+            if (new_password && !old_password) {
+                throw new AppError("Você precisa informar a senha antiga para definir uma nova senha.", 400);
+            }
+
+            if (new_password && old_password) {
+                const checkOldPassword = await compare(old_password, user.password);
+                if (!checkOldPassword) {
+                    throw new AppError("A senha antiga não está correta.", 400);
+                }
+
+                const updatedpassword = await hash(new_password, 8);
+                user.password = updatedpassword;
+            }
+
+            await knex("users").where({ id: id }).update({
+                name: user.name,
+                email: user.email,
+                password: user.password
+            });
+
+            res.status(200).json({ message: "Usuário atualizado com sucesso." });
+        } catch (error) {
+            if (error instanceof AppError) {
+                res.status(error.statusCode).json({ error: error.message });
+            } else {
+                console.error("Erro ao atualizar usuário:", error);
+                res.status(500).json({ error: "Ocorreu um erro ao processar a requisição." });
+            }
         }
-
-        await knex("users").where({ id: id }).update({
-            name: user.name,
-            email: user.email,
-            password: user.password
-        });
-
-        res.status(200).json({ message: "Usuário atualizado com sucesso." });
     }
 }
 
