@@ -10,6 +10,14 @@ class UsersController {
             throw new AppError("O nome é obrigatório...");
         }
 
+        if(!email) {
+            throw new AppError("O email é obrigatório...");
+        }
+
+        if(!password) {
+            throw new AppError("A senha é obrigatória...");
+        }
+
         const hashedPassword = await hash(password, 8);
 
         await knex("users").insert({
