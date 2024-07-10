@@ -100,6 +100,55 @@ class movie_notesController {
             };
         };
     };
-};
+
+    async delete(req, res) {
+        const { note_id } = req.params;
+        const { user_id, password} = req.body;
+
+        try {
+            if(!user_id) {
+                throw new AppError("O ID do usuário dono da nota não foi informado...");
+            };
+
+            if(!password) {
+                throw new AppError("A senha do usuário dono da nota não foi informada...");
+            };
+
+            const note = await knex('movie_notes').where({id : note_id}).first();
+
+            if(!note) {
+                throw new AppError("A nota requerida não existe...");
+            };
+
+            const user = await knex('users').where({ id : user_id }).first();
+
+            if(!user) {
+                throw new AppError("ID do usuário informado é inválido ou inexistente...");
+            };
+
+            if(user_id != note.user_id) {
+                throw new AppError("Você não tem permissão para deletar essa nota. Ela não te pertence...");
+            };
+
+            const checkPassword = compare(password, user.password);
+
+            if(!checkPassword) {
+                throw new AppError("A senha digitada não está correta. Nenhuma alteração feita. Tente novamente...");
+            };
+
+            await knex("movie_notes").where({ id : note_id }).delete();
+
+            res.status(202).json({ message: "Nota deletada com sucesso." });
+
+        } catch (error) {
+            if (error instanceof AppError) {
+                res.status(error.statusCode).json({ error: error.message });
+            } else {
+                console.error("Erro ao atualizar usuário:", error);
+                res.status(500).json({ error: "Ocorreu um erro ao processar a requisição." });
+            };
+        };
+    };
+}
 
 module.exports = movie_notesController;
