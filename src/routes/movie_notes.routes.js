@@ -6,4 +6,6 @@ const movieNotesRoutes = Router();
 
 const movieNotesController = new MovieNotesController();
 
-movieNotesRoutes.post("/create", movieNotesController.create)
+movieNotesRoutes.post("/:id/createNote", movieNotesController.create)
+
+module.exports = movieNotesRoutes;
