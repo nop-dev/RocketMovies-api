@@ -83,11 +83,38 @@ class UsersController {
 
     async delete(req, res) {
         const { id } = req.params;
+        const { password } = req.body;
 
-        await knex("users").where({ id : id }).delete();
+        try {
+            if(!password) {
+                throw new AppError("A senha do usuário a ser deletado não foi informada...");
+            };
 
-        res.status(202).json()
-    }
-}
+            const user = await knex('users').where({id : id}).first();
+
+            if(!user) {
+                throw new AppError("Usuário a ser deletado não encontrado...");
+            };
+
+            const checkPassword = await compare(password, user.password);
+
+            if(!checkPassword) {
+                throw new AppError("A senha digitada não está correta, usuário não deletado. Tente novamente...");
+            };
+
+            await knex("users").where({ id : id }).delete();
+
+            res.status(202).json({ message: "Usuário deletado com sucesso." });
+
+            } catch (error) {
+                if (error instanceof AppError) {
+                    res.status(error.statusCode).json({ error: error.message });
+                } else {
+                    console.error("Erro ao deletar usuário:", error);
+                    res.status(500).json({ error: "Ocorreu um erro ao processar a requisição.   " });
+                };
+            };
+        };
+    };
 
 module.exports = UsersController;
