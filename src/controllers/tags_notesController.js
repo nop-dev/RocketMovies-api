@@ -24,7 +24,7 @@ class tags_notesController {
                 throw new AppError("Essa nota não existe...");
             };
 
-            let userIdFromNote = note[0].user_id
+            const userIdFromNote = note[0].user_id
 
             if(userIdFromNote != user_id) {
                 throw new AppError("Você não é o dono da nota que você quer criar uma tag...")
@@ -69,7 +69,7 @@ class tags_notesController {
                 throw new AppError("Você enviou uma requisição vazia...");
             };
 
-            let userIdFromTag = tag[0].user_id
+            const userIdFromTag = tag[0].user_id
 
             if(userIdFromTag != user_id) {
                 throw new AppError("Você não é o dono da tag que você quer atualizar...")
@@ -92,7 +92,40 @@ class tags_notesController {
     }
 
     async delete(req, res) {
+        const { user_id, tag_id } = req.params;
 
+        try {
+            const tag = await knex('movie_tags').where({ id : tag_id })
+
+            if(tag.length === 0) {
+                throw new AppError("Sua tag não foi encontrada...");
+            }
+
+            const user = await knex('users').where({ id : user_id }).first();
+
+            if(!user) {
+                throw new AppError("Usuário do id especificado não foi encontrado...");
+             };
+
+            const userIdFromTag = tag[0].user_id
+
+            if(userIdFromTag != user_id) {
+                throw new AppError("Você não é o dono da tag que você quer deletar...")
+            }
+
+            await knex('movie_tags').where({id : tag_id }).delete();
+
+            res.status(202).json({ message: "Tag deletada com sucesso." });
+
+        } catch (error) {
+            if (error instanceof AppError) {
+                res.status(error.statusCode).json({ error: error.message });
+            } else {
+                console.error("Erro ao deletar a tag:", error);
+                res.status(500).json({ error: "Ocorreu um erro ao processar a requisição." });
+            };
+        };
+        
     }
 };
 
