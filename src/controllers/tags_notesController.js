@@ -26,8 +26,6 @@ class tags_notesController {
 
             let userIdFromNote = note[0].user_id
 
-            console.log(userIdFromNote)
-
             if(userIdFromNote != user_id) {
                 throw new AppError("Você não é o dono da nota que você quer criar uma tag...")
             }
@@ -51,7 +49,42 @@ class tags_notesController {
     }
 
     async update(req, res) {
+        const { user_id, tag_id } = req.params;
+        const { newTagName } = req.body;
 
+        try {
+            const user = await knex('users').where({ id : user_id }).first();
+
+            if(!user) {
+                throw new AppError("Usuário do id especificado não foi encontrado...");
+             };
+
+             const tag = await knex('movie_tags').where({ id : tag_id })
+
+             if(!tag) {
+                throw new AppError("Sua tag não foi encontrada...")
+             }
+
+            if(!newTagName) {
+                throw new AppError("Você enviou uma requisição vazia...");
+            };
+
+            let userIdFromTag = tag[0].user_id
+
+            if(userIdFromTag != user_id) {
+                throw new AppError("Você não é o dono da tag que você quer atualizar...")
+            }
+
+            res.status(200).json({ message: "Tag atualizada com sucesso." });
+
+        } catch (error) {
+            if (error instanceof AppError) {
+                res.status(error.statusCode).json({ error: error.message });
+            } else {
+                console.error("Erro ao atualizar a tag:", error);
+                res.status(500).json({ error: "Ocorreu um erro ao processar a requisição." });
+            };
+        };
     }
 
     async delete(req, res) {
