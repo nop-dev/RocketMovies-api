@@ -75,6 +75,10 @@ class tags_notesController {
                 throw new AppError("Você não é o dono da tag que você quer atualizar...")
             }
 
+            await knex('movie_tags').where({ id : tag_id }).update({
+                name : newTagName
+            });
+
             res.status(200).json({ message: "Tag atualizada com sucesso." });
 
         } catch (error) {
