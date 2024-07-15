@@ -101,6 +101,46 @@ class movie_notesController {
         };
     };
 
+    async index(req, res) {
+        const { user_id } = req.params;
+        const { password } = req.body;
+
+        try {
+            const user = await knex('users').where({ id : user_id }).first();
+
+            if(!user) {
+                    throw new AppError("ID do usuário informado é inválido ou inexistente...");
+            };
+
+            if(!password) {
+                throw new AppError("A senha não foi informada. Nenhuma alteração feita. Tente novamente...");
+            };
+
+            const checkPassword = await compare(password, user.password);
+
+            if(!checkPassword) {
+                throw new AppError("A senha digitada não está correta. Tente novamente...");
+            };
+
+            const notes = await knex("movie_notes").where({ user_id });
+            const tags = await knex("movie_tags").where({ user_id : user_id }).orderBy("name");
+
+            return res.json({
+                ...notes,
+                tags
+            });
+
+        } catch (error) {
+            if (error instanceof AppError) {
+                res.status(error.statusCode).json({ error: error.message });
+            } else {
+                console.error("Erro ao mostrar suas notas...", error);
+                res.status(500).json({ error: "Ocorreu um erro ao processar a requisição." });
+            };
+        };
+    }
+
+
     async delete(req, res) {
         const { note_id } = req.params;
         const { user_id, password} = req.body;
